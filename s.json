@@ -1,0 +1,2067 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Coleridge Rich Context Publications Ingestion",
+    "description": "Proposal:\n\n- The scorecard and the metadata pre scorecard will have different data sources (different tables or databases).\n- The metadata providers will have their own metadata. We don't care if they send duplicated data. Each provider has its own data.\n- It will allow them to add, update and delete their data as much as they want using the API proposed here.\n- We will have a process that will compile all the metadata, remove duplicates, and create the scorecard data.\n- Providers can have multiple tokens. The tokens used by the API will define who is the owner of the data.",
+    "contact": {},
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "http://example.com/}/v1/api",
+      "variables": {}
+    }
+  ],
+  "paths": {
+    "/publication": {
+      "post": {
+        "tags": [
+          "Misc"
+        ],
+        "summary": "Post Publication",
+        "description": "Create publications endpoint. Multiple publications can be created at the same time.\n\n- If the payload becomes too big, a 413 HTTP error will be returned.\n- If the server receives the request successfully, it will return a JSON of the status of each publication.",
+        "operationId": "PostPublication",
+        "parameters": [],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostPublicationRequest"
+              },
+              "example": {
+                "publications": [
+                  {
+                    "external_id": "Publication 1 External Id",
+                    "title": "Publication 1 Title",
+                    "doi": "Publication 1 DOI",
+                    "journal": {
+                      "external_id": "xpto 1",
+                      "name": "Journal 1 Name"
+                    },
+                    "topics": [
+                      {
+                        "external_id": "Topic 1 Id",
+                        "description": "Topic 1 Description"
+                      }
+                    ],
+                    "authors": [
+                      {
+                        "external_id": "Author 1 Id",
+                        "given_name": "Author 1 Given Name",
+                        "surname": "Author 1 Surname"
+                      }
+                    ],
+                    "datasets": [
+                      {
+                        "external_id": "Dataset 1 Id",
+                        "title": "Dataset 1 Title",
+                        "agency": "Dataset 1 Agency"
+                      }
+                    ]
+                  },
+                  {
+                    "external_id": "Publication 2 External Id",
+                    "title": "Publication 2 Title",
+                    "doi": "Publication 2 DOI",
+                    "journal": {
+                      "external_id": "xpto 2",
+                      "name": "Journal 2 Name"
+                    },
+                    "topics": [
+                      {
+                        "external_id": "Topic 2 Id",
+                        "description": "Topic 2 Description"
+                      }
+                    ],
+                    "authors": [
+                      {
+                        "external_id": "Author 2 Id",
+                        "given_name": "Author 2 Given Name",
+                        "surname": "Author 2 Surname"
+                      }
+                    ],
+                    "datasets": [
+                      {
+                        "external_id": "Dataset Id",
+                        "title": "Dataset Title",
+                        "agency": "Dataset Agency"
+                      }
+                    ]
+                  },
+                  {
+                    "external_id": "Publication 3 External Id",
+                    "title": "Publication 3 Title",
+                    "doi": "Publication 3 DOI",
+                    "journal": {
+                      "external_id": "xpto 3",
+                      "name": "Journal 3 Name"
+                    },
+                    "topics": [
+                      {
+                        "external_id": "Topic 3 Id",
+                        "description": "Topic 3 Description"
+                      }
+                    ],
+                    "authors": [
+                      {
+                        "external_id": "Author 3 Id",
+                        "given_name": "Author 3 Given Name",
+                        "surname": "Author 3 Surname"
+                      }
+                    ],
+                    "datasets": [
+                      {
+                        "external_id": "Dataset 3 Id",
+                        "title": "Dataset 3 Title",
+                        "agency": "Dataset 3 Agency"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/200OK"
+                },
+                "example": {
+                  "publications": [
+                    {
+                      "id": "<new_coleridge_id>",
+                      "external_id": "Publication 1 External Id",
+                      "status": "ingested"
+                    },
+                    {
+                      "id": "<new_coleridge_id>",
+                      "external_id": "Publication 2 External Id",
+                      "status": "updated"
+                    },
+                    {
+                      "id": "<new_coleridge_id>",
+                      "external_id": "Publication 3 External Id",
+                      "status": "failed",
+                      "message": "Title field missing"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request Entity Too Large",
+            "headers": {},
+            "content": {}
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Misc"
+        ],
+        "summary": "Get Publication",
+        "operationId": "GetPublication",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Coleridge Publication ID",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "xyz"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "example": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Itens per page",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "example": 100
+            }
+          },
+          {
+            "name": "external_id",
+            "in": "query",
+            "description": "External Publication ID",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/200OK1"
+                },
+                "example": {
+                  "publications": [
+                    {
+                      "id": "Pub 1 Coleridge ID",
+                      "external_id": "Publication 1 External Id",
+                      "title": "Publication 1 Title",
+                      "doi": "Publication 1 DOI",
+                      "journal": {
+                        "external_id": "xpto 1",
+                        "name": "Journal 1 Name"
+                      },
+                      "topics": [
+                        {
+                          "id": "Coleridge ID",
+                          "external_id": "Topic 1 Id",
+                          "description": "Topic 1 Description"
+                        }
+                      ],
+                      "authors": [
+                        {
+                          "id": "Coleridge ID",
+                          "external_id": "Author 1 Id",
+                          "given_name": "Author 1 Given Name",
+                          "surname": "Author 1 Surname"
+                        }
+                      ],
+                      "datasets": [
+                        {
+                          "id": "Coleridge ID",
+                          "external_id": "Dataset 1 Id",
+                          "title": "Dataset 1 Title",
+                          "agency": "Dataset 1 Agency"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Publication 2 External Id",
+                      "title": "Publication 2 Title",
+                      "doi": "Publication 2 DOI",
+                      "journal": {
+                        "external_id": "xpto 2",
+                        "name": "Journal 2 Name"
+                      },
+                      "topics": [
+                        {
+                          "id": "Coleridge ID",
+                          "external_id": "Topic 2 Id",
+                          "description": "Topic 2 Description"
+                        }
+                      ],
+                      "authors": [
+                        {
+                          "id": "Coleridge ID",
+                          "external_id": "Author 2 Id",
+                          "given_name": "Author 2 Given Name",
+                          "surname": "Author 2 Surname"
+                        }
+                      ],
+                      "datasets": [
+                        {
+                          "id": "Coleridge ID",
+                          "external_id": "Dataset Id",
+                          "title": "Dataset Title",
+                          "agency": "Dataset Agency"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Publication 3 External Id",
+                      "title": "Publication 3 Title",
+                      "doi": "Publication 3 DOI",
+                      "journal": {
+                        "external_id": "xpto 3",
+                        "name": "Journal 3 Name"
+                      },
+                      "topics": [
+                        {
+                          "id": "Coleridge ID",
+                          "external_id": "Topic 3 Id",
+                          "description": "Topic 3 Description"
+                        }
+                      ],
+                      "authors": [
+                        {
+                          "id": "Coleridge ID",
+                          "external_id": "Author 3 Id",
+                          "given_name": "Author 3 Given Name",
+                          "surname": "Author 3 Surname"
+                        }
+                      ],
+                      "datasets": [
+                        {
+                          "id": "Coleridge ID",
+                          "external_id": "Dataset 3 Id",
+                          "title": "Dataset 3 Title",
+                          "agency": "Dataset 3 Agency"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "delete": {
+        "tags": [
+          "Misc"
+        ],
+        "summary": "Delete Publications",
+        "operationId": "DeletePublications",
+        "parameters": [],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeletePublicationsRequest"
+              },
+              "example": {
+                "conditions": [
+                  {
+                    "external_id": "xyz"
+                  },
+                  {
+                    "id": "xpto"
+                  },
+                  {
+                    "journal_id": "qwerty"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/200OK2"
+                },
+                "example": {
+                  "publications": [
+                    {
+                      "id": "<new_coleridge_id>",
+                      "external_id": "Publication 1 External Id",
+                      "status": "deleted"
+                    },
+                    {
+                      "id": "<new_coleridge_id>",
+                      "external_id": "Publication 2 External Id",
+                      "status": "deleted"
+                    },
+                    {
+                      "id": "<new_coleridge_id>",
+                      "external_id": "Publication 3 External Id",
+                      "status": "deleted"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/dataset": {
+      "get": {
+        "tags": [
+          "Misc"
+        ],
+        "summary": "Get Dataset",
+        "operationId": "GetDataset",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Coleridge Dataset ID",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "xyz"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "example": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Itens per page",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "example": 100
+            }
+          },
+          {
+            "name": "external_id",
+            "in": "query",
+            "description": "External Dataset ID",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/200OK3"
+                },
+                "example": {
+                  "datasets": [
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Dataset 1 Id",
+                      "title": "Dataset 1 Title",
+                      "agency": "Dataset 1 Agency"
+                    },
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Dataset Id",
+                      "title": "Dataset Title",
+                      "agency": "Dataset Agency"
+                    },
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Dataset 3 Id",
+                      "title": "Dataset 3 Title",
+                      "agency": "Dataset 3 Agency"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "put": {
+        "tags": [
+          "Misc"
+        ],
+        "summary": "Update Dataset",
+        "operationId": "UpdateDataset",
+        "parameters": [],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDatasetRequest"
+              },
+              "example": {
+                "datasets": [
+                  {
+                    "external_id": "Dataset 1 Id",
+                    "title": "Dataset 1 Title",
+                    "agency": "Dataset 1 Agency"
+                  },
+                  {
+                    "external_id": "Dataset Id",
+                    "title": "Dataset Title",
+                    "agency": "Dataset Agency"
+                  },
+                  {
+                    "external_id": "Dataset 3 Id",
+                    "title": "Dataset 3 Title",
+                    "agency": "Dataset 3 Agency"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "default": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/200OK4"
+                },
+                "example": {
+                  "datasets": [
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Dataset 1 Id",
+                      "status": "updated"
+                    },
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Dataset Id",
+                      "status": "updated"
+                    },
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Dataset 3 Id",
+                      "status": "not_found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/author": {
+      "get": {
+        "tags": [
+          "Misc"
+        ],
+        "summary": "Get Author",
+        "operationId": "GetAuthor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Coleridge's Author ID",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "external_id",
+            "in": "query",
+            "description": "External Author Id",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page Number",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Itens per page",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/200OK5"
+                },
+                "example": {
+                  "authors": [
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Author 1 Id",
+                      "given_name": "Author 1 Given Name",
+                      "surname": "Author 1 Surname"
+                    },
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Author 2 Id",
+                      "given_name": "Author 2 Given Name",
+                      "surname": "Author 2 Surname"
+                    },
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Author 3 Id",
+                      "given_name": "Author 3 Given Name",
+                      "surname": "Author 3 Surname"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "put": {
+        "tags": [
+          "Misc"
+        ],
+        "summary": "Update Author",
+        "operationId": "UpdateAuthor",
+        "parameters": [],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAuthorRequest"
+              },
+              "example": {
+                "authors": [
+                  {
+                    "external_id": "Author 1 Id",
+                    "given_name": "Author 1 Given Name",
+                    "surname": "Author 1 Surname"
+                  },
+                  {
+                    "external_id": "Author 2 Id",
+                    "given_name": "Author 2 Given Name",
+                    "surname": "Author 2 Surname"
+                  },
+                  {
+                    "external_id": "Author 3 Id",
+                    "given_name": "Author 3 Given Name",
+                    "surname": "Author 3 Surname"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/200OK6"
+                },
+                "example": {
+                  "authors": [
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Author 1 Id",
+                      "status": "updated"
+                    },
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Author 2 Id",
+                      "status": "updated"
+                    },
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Author 3 Id",
+                      "status": "not_found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/journal": {
+      "get": {
+        "tags": [
+          "Misc"
+        ],
+        "summary": "Get Journal",
+        "operationId": "GetJournal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Coleridge Journal ID",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "external_id",
+            "in": "query",
+            "description": "Coleridge External ID",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page Number",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Itens Per Page",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/200OK7"
+                },
+                "example": {
+                  "journals": [
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Journal 1 Id",
+                      "name": "Journal 1 Surname"
+                    },
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Journal 2 Id",
+                      "name": "Journal 2 Surname"
+                    },
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Journal 3 Id",
+                      "name": "Journal 3 Surname"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "put": {
+        "tags": [
+          "Misc"
+        ],
+        "summary": "Update Journal",
+        "operationId": "UpdateJournal",
+        "parameters": [],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateJournalRequest"
+              },
+              "example": {
+                "journals": [
+                  {
+                    "external_id": "Journal 1 Id",
+                    "name": "Journal 1 Surname"
+                  },
+                  {
+                    "external_id": "Journal 2 Id",
+                    "name": "Journal 2 Surname"
+                  },
+                  {
+                    "external_id": "Journal 3 Id",
+                    "name": "Journal 3 Surname"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/200OK8"
+                },
+                "example": {
+                  "journals": [
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Journal 1 Id",
+                      "status": "updated"
+                    },
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Journal 2 Id",
+                      "status": "updated"
+                    },
+                    {
+                      "id": "Coleridge ID",
+                      "external_id": "Journal 3 Id",
+                      "status": "updated"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PostPublicationRequest": {
+        "title": "PostPublicationRequest",
+        "required": [
+          "publications"
+        ],
+        "type": "object",
+        "properties": {
+          "publications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Publication"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "publications": [
+            {
+              "external_id": "Publication 1 External Id",
+              "title": "Publication 1 Title",
+              "doi": "Publication 1 DOI",
+              "journal": {
+                "external_id": "xpto 1",
+                "name": "Journal 1 Name"
+              },
+              "topics": [
+                {
+                  "external_id": "Topic 1 Id",
+                  "description": "Topic 1 Description"
+                }
+              ],
+              "authors": [
+                {
+                  "external_id": "Author 1 Id",
+                  "given_name": "Author 1 Given Name",
+                  "surname": "Author 1 Surname"
+                }
+              ],
+              "datasets": [
+                {
+                  "external_id": "Dataset 1 Id",
+                  "title": "Dataset 1 Title",
+                  "agency": "Dataset 1 Agency"
+                }
+              ]
+            },
+            {
+              "external_id": "Publication 2 External Id",
+              "title": "Publication 2 Title",
+              "doi": "Publication 2 DOI",
+              "journal": {
+                "external_id": "xpto 2",
+                "name": "Journal 2 Name"
+              },
+              "topics": [
+                {
+                  "external_id": "Topic 2 Id",
+                  "description": "Topic 2 Description"
+                }
+              ],
+              "authors": [
+                {
+                  "external_id": "Author 2 Id",
+                  "given_name": "Author 2 Given Name",
+                  "surname": "Author 2 Surname"
+                }
+              ],
+              "datasets": [
+                {
+                  "external_id": "Dataset Id",
+                  "title": "Dataset Title",
+                  "agency": "Dataset Agency"
+                }
+              ]
+            },
+            {
+              "external_id": "Publication 3 External Id",
+              "title": "Publication 3 Title",
+              "doi": "Publication 3 DOI",
+              "journal": {
+                "external_id": "xpto 3",
+                "name": "Journal 3 Name"
+              },
+              "topics": [
+                {
+                  "external_id": "Topic 3 Id",
+                  "description": "Topic 3 Description"
+                }
+              ],
+              "authors": [
+                {
+                  "external_id": "Author 3 Id",
+                  "given_name": "Author 3 Given Name",
+                  "surname": "Author 3 Surname"
+                }
+              ],
+              "datasets": [
+                {
+                  "external_id": "Dataset 3 Id",
+                  "title": "Dataset 3 Title",
+                  "agency": "Dataset 3 Agency"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "Publication": {
+        "title": "Publication",
+        "required": [
+          "external_id",
+          "title",
+          "doi",
+          "journal",
+          "topics",
+          "authors",
+          "datasets"
+        ],
+        "type": "object",
+        "properties": {
+          "external_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "doi": {
+            "type": "string"
+          },
+          "journal": {
+            "$ref": "#/components/schemas/Journal"
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Topic"
+            },
+            "description": ""
+          },
+          "authors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Author"
+            },
+            "description": ""
+          },
+          "datasets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Dataset"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "external_id": "Publication 1 External Id",
+          "title": "Publication 1 Title",
+          "doi": "Publication 1 DOI",
+          "journal": {
+            "external_id": "xpto 1",
+            "name": "Journal 1 Name"
+          },
+          "topics": [
+            {
+              "external_id": "Topic 1 Id",
+              "description": "Topic 1 Description"
+            }
+          ],
+          "authors": [
+            {
+              "external_id": "Author 1 Id",
+              "given_name": "Author 1 Given Name",
+              "surname": "Author 1 Surname"
+            }
+          ],
+          "datasets": [
+            {
+              "external_id": "Dataset 1 Id",
+              "title": "Dataset 1 Title",
+              "agency": "Dataset 1 Agency"
+            }
+          ]
+        }
+      },
+      "Journal": {
+        "title": "Journal",
+        "required": [
+          "external_id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "external_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "external_id": "xpto 1",
+          "name": "Journal 1 Name"
+        }
+      },
+      "Topic": {
+        "title": "Topic",
+        "required": [
+          "external_id",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "external_id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "external_id": "Topic 1 Id",
+          "description": "Topic 1 Description"
+        }
+      },
+      "Author": {
+        "title": "Author",
+        "required": [
+          "external_id",
+          "given_name",
+          "surname"
+        ],
+        "type": "object",
+        "properties": {
+          "external_id": {
+            "type": "string"
+          },
+          "given_name": {
+            "type": "string"
+          },
+          "surname": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "external_id": "Author 1 Id",
+          "given_name": "Author 1 Given Name",
+          "surname": "Author 1 Surname"
+        }
+      },
+      "Dataset": {
+        "title": "Dataset",
+        "required": [
+          "external_id",
+          "title",
+          "agency"
+        ],
+        "type": "object",
+        "properties": {
+          "external_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "agency": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "external_id": "Dataset 1 Id",
+          "title": "Dataset 1 Title",
+          "agency": "Dataset 1 Agency"
+        }
+      },
+      "200OK": {
+        "title": "200OK",
+        "required": [
+          "publications"
+        ],
+        "type": "object",
+        "properties": {
+          "publications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Publication1"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "publications": [
+            {
+              "id": "<new_coleridge_id>",
+              "external_id": "Publication 1 External Id",
+              "status": "ingested"
+            },
+            {
+              "id": "<new_coleridge_id>",
+              "external_id": "Publication 2 External Id",
+              "status": "updated"
+            },
+            {
+              "id": "<new_coleridge_id>",
+              "external_id": "Publication 3 External Id",
+              "status": "failed",
+              "message": "Title field missing"
+            }
+          ]
+        }
+      },
+      "Publication1": {
+        "title": "Publication1",
+        "required": [
+          "id",
+          "external_id",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "external_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "id": "<new_coleridge_id>",
+          "external_id": "Publication 1 External Id",
+          "status": "ingested"
+        }
+      },
+      "200OK1": {
+        "title": "200OK1",
+        "required": [
+          "publications"
+        ],
+        "type": "object",
+        "properties": {
+          "publications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Publication2"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "publications": [
+            {
+              "id": "Pub 1 Coleridge ID",
+              "external_id": "Publication 1 External Id",
+              "title": "Publication 1 Title",
+              "doi": "Publication 1 DOI",
+              "journal": {
+                "external_id": "xpto 1",
+                "name": "Journal 1 Name"
+              },
+              "topics": [
+                {
+                  "id": "Coleridge ID",
+                  "external_id": "Topic 1 Id",
+                  "description": "Topic 1 Description"
+                }
+              ],
+              "authors": [
+                {
+                  "id": "Coleridge ID",
+                  "external_id": "Author 1 Id",
+                  "given_name": "Author 1 Given Name",
+                  "surname": "Author 1 Surname"
+                }
+              ],
+              "datasets": [
+                {
+                  "id": "Coleridge ID",
+                  "external_id": "Dataset 1 Id",
+                  "title": "Dataset 1 Title",
+                  "agency": "Dataset 1 Agency"
+                }
+              ]
+            },
+            {
+              "id": "Coleridge ID",
+              "external_id": "Publication 2 External Id",
+              "title": "Publication 2 Title",
+              "doi": "Publication 2 DOI",
+              "journal": {
+                "external_id": "xpto 2",
+                "name": "Journal 2 Name"
+              },
+              "topics": [
+                {
+                  "id": "Coleridge ID",
+                  "external_id": "Topic 2 Id",
+                  "description": "Topic 2 Description"
+                }
+              ],
+              "authors": [
+                {
+                  "id": "Coleridge ID",
+                  "external_id": "Author 2 Id",
+                  "given_name": "Author 2 Given Name",
+                  "surname": "Author 2 Surname"
+                }
+              ],
+              "datasets": [
+                {
+                  "id": "Coleridge ID",
+                  "external_id": "Dataset Id",
+                  "title": "Dataset Title",
+                  "agency": "Dataset Agency"
+                }
+              ]
+            },
+            {
+              "id": "Coleridge ID",
+              "external_id": "Publication 3 External Id",
+              "title": "Publication 3 Title",
+              "doi": "Publication 3 DOI",
+              "journal": {
+                "external_id": "xpto 3",
+                "name": "Journal 3 Name"
+              },
+              "topics": [
+                {
+                  "id": "Coleridge ID",
+                  "external_id": "Topic 3 Id",
+                  "description": "Topic 3 Description"
+                }
+              ],
+              "authors": [
+                {
+                  "id": "Coleridge ID",
+                  "external_id": "Author 3 Id",
+                  "given_name": "Author 3 Given Name",
+                  "surname": "Author 3 Surname"
+                }
+              ],
+              "datasets": [
+                {
+                  "id": "Coleridge ID",
+                  "external_id": "Dataset 3 Id",
+                  "title": "Dataset 3 Title",
+                  "agency": "Dataset 3 Agency"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "Publication2": {
+        "title": "Publication2",
+        "required": [
+          "id",
+          "external_id",
+          "title",
+          "doi",
+          "journal",
+          "topics",
+          "authors",
+          "datasets"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "external_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "doi": {
+            "type": "string"
+          },
+          "journal": {
+            "$ref": "#/components/schemas/Journal"
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Topic1"
+            },
+            "description": ""
+          },
+          "authors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Author1"
+            },
+            "description": ""
+          },
+          "datasets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Dataset1"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "id": "Pub 1 Coleridge ID",
+          "external_id": "Publication 1 External Id",
+          "title": "Publication 1 Title",
+          "doi": "Publication 1 DOI",
+          "journal": {
+            "external_id": "xpto 1",
+            "name": "Journal 1 Name"
+          },
+          "topics": [
+            {
+              "id": "Coleridge ID",
+              "external_id": "Topic 1 Id",
+              "description": "Topic 1 Description"
+            }
+          ],
+          "authors": [
+            {
+              "id": "Coleridge ID",
+              "external_id": "Author 1 Id",
+              "given_name": "Author 1 Given Name",
+              "surname": "Author 1 Surname"
+            }
+          ],
+          "datasets": [
+            {
+              "id": "Coleridge ID",
+              "external_id": "Dataset 1 Id",
+              "title": "Dataset 1 Title",
+              "agency": "Dataset 1 Agency"
+            }
+          ]
+        }
+      },
+      "Topic1": {
+        "title": "Topic1",
+        "required": [
+          "id",
+          "external_id",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "external_id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "id": "Coleridge ID",
+          "external_id": "Topic 1 Id",
+          "description": "Topic 1 Description"
+        }
+      },
+      "Author1": {
+        "title": "Author1",
+        "required": [
+          "id",
+          "external_id",
+          "given_name",
+          "surname"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "external_id": {
+            "type": "string"
+          },
+          "given_name": {
+            "type": "string"
+          },
+          "surname": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "id": "Coleridge ID",
+          "external_id": "Author 1 Id",
+          "given_name": "Author 1 Given Name",
+          "surname": "Author 1 Surname"
+        }
+      },
+      "Dataset1": {
+        "title": "Dataset1",
+        "required": [
+          "id",
+          "external_id",
+          "title",
+          "agency"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "external_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "agency": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "id": "Coleridge ID",
+          "external_id": "Dataset 1 Id",
+          "title": "Dataset 1 Title",
+          "agency": "Dataset 1 Agency"
+        }
+      },
+      "DeletePublicationsRequest": {
+        "title": "DeletePublicationsRequest",
+        "required": [
+          "conditions"
+        ],
+        "type": "object",
+        "properties": {
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Condition"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "conditions": [
+            {
+              "external_id": "xyz"
+            },
+            {
+              "id": "xpto"
+            },
+            {
+              "journal_id": "qwerty"
+            }
+          ]
+        }
+      },
+      "Condition": {
+        "title": "Condition",
+        "type": "object",
+        "properties": {
+          "external_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "journal_id": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "external_id": "xyz"
+        }
+      },
+      "200OK2": {
+        "title": "200OK2",
+        "required": [
+          "publications"
+        ],
+        "type": "object",
+        "properties": {
+          "publications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Publication3"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "publications": [
+            {
+              "id": "<new_coleridge_id>",
+              "external_id": "Publication 1 External Id",
+              "status": "deleted"
+            },
+            {
+              "id": "<new_coleridge_id>",
+              "external_id": "Publication 2 External Id",
+              "status": "deleted"
+            },
+            {
+              "id": "<new_coleridge_id>",
+              "external_id": "Publication 3 External Id",
+              "status": "deleted"
+            }
+          ]
+        }
+      },
+      "Publication3": {
+        "title": "Publication3",
+        "required": [
+          "id",
+          "external_id",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "external_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "id": "<new_coleridge_id>",
+          "external_id": "Publication 1 External Id",
+          "status": "deleted"
+        }
+      },
+      "200OK3": {
+        "title": "200OK3",
+        "required": [
+          "datasets"
+        ],
+        "type": "object",
+        "properties": {
+          "datasets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Dataset1"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "datasets": [
+            {
+              "id": "Coleridge ID",
+              "external_id": "Dataset 1 Id",
+              "title": "Dataset 1 Title",
+              "agency": "Dataset 1 Agency"
+            },
+            {
+              "id": "Coleridge ID",
+              "external_id": "Dataset Id",
+              "title": "Dataset Title",
+              "agency": "Dataset Agency"
+            },
+            {
+              "id": "Coleridge ID",
+              "external_id": "Dataset 3 Id",
+              "title": "Dataset 3 Title",
+              "agency": "Dataset 3 Agency"
+            }
+          ]
+        }
+      },
+      "UpdateDatasetRequest": {
+        "title": "UpdateDatasetRequest",
+        "required": [
+          "datasets"
+        ],
+        "type": "object",
+        "properties": {
+          "datasets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Dataset"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "datasets": [
+            {
+              "external_id": "Dataset 1 Id",
+              "title": "Dataset 1 Title",
+              "agency": "Dataset 1 Agency"
+            },
+            {
+              "external_id": "Dataset Id",
+              "title": "Dataset Title",
+              "agency": "Dataset Agency"
+            },
+            {
+              "external_id": "Dataset 3 Id",
+              "title": "Dataset 3 Title",
+              "agency": "Dataset 3 Agency"
+            }
+          ]
+        }
+      },
+      "200OK4": {
+        "title": "200OK4",
+        "required": [
+          "datasets"
+        ],
+        "type": "object",
+        "properties": {
+          "datasets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Dataset4"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "datasets": [
+            {
+              "id": "Coleridge ID",
+              "external_id": "Dataset 1 Id",
+              "status": "updated"
+            },
+            {
+              "id": "Coleridge ID",
+              "external_id": "Dataset Id",
+              "status": "updated"
+            },
+            {
+              "id": "Coleridge ID",
+              "external_id": "Dataset 3 Id",
+              "status": "not_found"
+            }
+          ]
+        }
+      },
+      "Dataset4": {
+        "title": "Dataset4",
+        "required": [
+          "id",
+          "external_id",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "external_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "id": "Coleridge ID",
+          "external_id": "Dataset 1 Id",
+          "status": "updated"
+        }
+      },
+      "200OK5": {
+        "title": "200OK5",
+        "required": [
+          "authors"
+        ],
+        "type": "object",
+        "properties": {
+          "authors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Author1"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "authors": [
+            {
+              "id": "Coleridge ID",
+              "external_id": "Author 1 Id",
+              "given_name": "Author 1 Given Name",
+              "surname": "Author 1 Surname"
+            },
+            {
+              "id": "Coleridge ID",
+              "external_id": "Author 2 Id",
+              "given_name": "Author 2 Given Name",
+              "surname": "Author 2 Surname"
+            },
+            {
+              "id": "Coleridge ID",
+              "external_id": "Author 3 Id",
+              "given_name": "Author 3 Given Name",
+              "surname": "Author 3 Surname"
+            }
+          ]
+        }
+      },
+      "UpdateAuthorRequest": {
+        "title": "UpdateAuthorRequest",
+        "required": [
+          "authors"
+        ],
+        "type": "object",
+        "properties": {
+          "authors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Author"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "authors": [
+            {
+              "external_id": "Author 1 Id",
+              "given_name": "Author 1 Given Name",
+              "surname": "Author 1 Surname"
+            },
+            {
+              "external_id": "Author 2 Id",
+              "given_name": "Author 2 Given Name",
+              "surname": "Author 2 Surname"
+            },
+            {
+              "external_id": "Author 3 Id",
+              "given_name": "Author 3 Given Name",
+              "surname": "Author 3 Surname"
+            }
+          ]
+        }
+      },
+      "200OK6": {
+        "title": "200OK6",
+        "required": [
+          "authors"
+        ],
+        "type": "object",
+        "properties": {
+          "authors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Author4"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "authors": [
+            {
+              "id": "Coleridge ID",
+              "external_id": "Author 1 Id",
+              "status": "updated"
+            },
+            {
+              "id": "Coleridge ID",
+              "external_id": "Author 2 Id",
+              "status": "updated"
+            },
+            {
+              "id": "Coleridge ID",
+              "external_id": "Author 3 Id",
+              "status": "not_found"
+            }
+          ]
+        }
+      },
+      "Author4": {
+        "title": "Author4",
+        "required": [
+          "id",
+          "external_id",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "external_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "id": "Coleridge ID",
+          "external_id": "Author 1 Id",
+          "status": "updated"
+        }
+      },
+      "200OK7": {
+        "title": "200OK7",
+        "required": [
+          "journals"
+        ],
+        "type": "object",
+        "properties": {
+          "journals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Journal2"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "journals": [
+            {
+              "id": "Coleridge ID",
+              "external_id": "Journal 1 Id",
+              "name": "Journal 1 Surname"
+            },
+            {
+              "id": "Coleridge ID",
+              "external_id": "Journal 2 Id",
+              "name": "Journal 2 Surname"
+            },
+            {
+              "id": "Coleridge ID",
+              "external_id": "Journal 3 Id",
+              "name": "Journal 3 Surname"
+            }
+          ]
+        }
+      },
+      "Journal2": {
+        "title": "Journal2",
+        "required": [
+          "id",
+          "external_id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "external_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "id": "Coleridge ID",
+          "external_id": "Journal 1 Id",
+          "name": "Journal 1 Surname"
+        }
+      },
+      "UpdateJournalRequest": {
+        "title": "UpdateJournalRequest",
+        "required": [
+          "journals"
+        ],
+        "type": "object",
+        "properties": {
+          "journals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Journal"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "journals": [
+            {
+              "external_id": "Journal 1 Id",
+              "name": "Journal 1 Surname"
+            },
+            {
+              "external_id": "Journal 2 Id",
+              "name": "Journal 2 Surname"
+            },
+            {
+              "external_id": "Journal 3 Id",
+              "name": "Journal 3 Surname"
+            }
+          ]
+        }
+      },
+      "200OK8": {
+        "title": "200OK8",
+        "required": [
+          "journals"
+        ],
+        "type": "object",
+        "properties": {
+          "journals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Journal4"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "journals": [
+            {
+              "id": "Coleridge ID",
+              "external_id": "Journal 1 Id",
+              "status": "updated"
+            },
+            {
+              "id": "Coleridge ID",
+              "external_id": "Journal 2 Id",
+              "status": "updated"
+            },
+            {
+              "id": "Coleridge ID",
+              "external_id": "Journal 3 Id",
+              "status": "updated"
+            }
+          ]
+        }
+      },
+      "Journal4": {
+        "title": "Journal4",
+        "required": [
+          "id",
+          "external_id",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "external_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "id": "Coleridge ID",
+          "external_id": "Journal 1 Id",
+          "status": "updated"
+        }
+      }
+    },
+    "securitySchemes": {
+      "httpBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "security": [
+    {
+      "httpBearer": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Misc",
+      "description": ""
+    }
+  ]
+}
